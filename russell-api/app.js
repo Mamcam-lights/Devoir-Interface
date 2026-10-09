@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 
 const app = express();
 app.use(express.json());
+app.use('/catways', require('./routes/route'));
+app.use('/catways/:id/reservations', require('./routes/reservationroute'));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connecté'))
