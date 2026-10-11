@@ -1,0 +1,32 @@
+!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord</title>
+</head>
+<body>
+    <h1>Tableau de bord</h1>
+    <button id="logout">Déconnecxion</button>
+    <h2>Catways</h2>
+    <ul id="catways"></ul>
+
+    <script>
+        document.getElementById('logout').addEventListener('click', async () => {
+            await fetch('/logout');
+            location.href = '/';
+        });
+
+        (async () => {
+            const res = await fetch('/catways');
+            const list = await res.json();
+            const ul = document.getElementById('catways');
+            list.forEach(c => {
+                const li = document.createElement('li');
+                li.textContent = 'n°${c.catwayNumber} - ${c.catwayType} - ${c.catwayState}';
+                ul.appendChild(li);
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port de Russell</title>
+</head>
+<body>
+    <h1>Port de plaisance de Russell</h1>
+    <form id="form">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Mot de pase" required>
+        <button>Connexion</button>
+    </form>
+    <p id="message"></p>
+    <a href="/api-docs">Documentation de l'API</a>
+
+    <script>
+        document.getElementById('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) location.href = '/dashboard';
+            else document.getElementById('message').textContent = data.message;
+        });
+    </script>
+</body>
+</html>
