@@ -58,4 +58,4 @@ Le serveur démarre sur http://localhost:3000.
 Toutes les routes sauf `/login` et `/logout`, nécessitent d'être connecté. Le details est dans la documentation Swagger.
 
 ## Auteure
-<CAMARA MARIAM> - proget de formation, centre euproéen de formation
+<CAMARA MARIAM> - projet de formation, centre euproéen de formation
