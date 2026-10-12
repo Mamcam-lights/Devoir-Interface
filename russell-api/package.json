@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "start": "node app.js",
+  "scripts": {
+    "dev": "env-cmd -f ./env/ .env.dev nodemon app.js",
+    "start": "node app.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
