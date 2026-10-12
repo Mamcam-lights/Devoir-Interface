@@ -1,0 +1,115 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API du Port de Plaisance de Russell",
+        "version": "1.0.0",
+        "description": "API privée de gestion des catways, des réservations et des utilisateurs. Connectez-vous d'abord avec POST /login."
+    },
+    "components": {
+        "securitySchemes": {
+            "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "token" }
+        },
+        "parameters": {
+            "catwayId": { "name": "id", "in": "path", "required": true, "description": "Numéro du catway", "schema": {"type": "integer" } },
+            "reservationId": { "name": "idResservation", "in": "path", "requied": true, "description": "Identifiant de la réservation", "schema": { "type": "string" } },
+            "email": { "name": "email", "in": "path", "required": true, "description": "Email de l'utilisateur", "schema": { "type": "string" } }
+        },
+        "schemas": {
+            "catway": {
+                "type": "object",
+                "properties":{
+                    "catwayNumber": { "type": "integer", "example": 1 },
+                    "catwayType": { "type": "string", "enum": ["long", "short"] },
+                    "catwayState": { "type": "string", "example": "bon état" }
+                }
+            },
+            "Reservation": {
+                "type": "object",
+                "properties": {
+                    "clientName": { "type": "string", "example": "thomas Martin" },
+                    "boatName": { "type": "string", "example": "Le cormoran" },
+                    "stateDate": { "type": "string", "format": "date", "example":"2026-11-01" },
+                    "endDate": { "type": "string", "format": "date", "example":"2026-11-10" }
+                }
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "username": { "type": "string", "example": "capitaine" },
+                    "email": { "type": "string", "example": "capitaine@russell.fr" },
+                    "password": { "type": "string", "example": "motdepasse123" }
+                }
+            }
+        }
+    },
+    "security": [{ "cookieAuth": [] }],
+    "paths": {
+        "/login": {
+            "post": {
+                "tags": ["Authentification"],
+                "summary": "Se connecter",
+                "security": [],
+                "responses": { "200": { "description": "Connecté" }, "401": { "description": "Identifiants incorrects" } }
+            }
+        },
+        "/logout": {
+            "get": {
+                "tags": ["Authentification"],
+                "summary": "Se déconnecter",
+                "security": [],
+                "responses": { "200": { "description": "Déconnecté" } }
+            }
+        },
+        "/catways": {
+            "get": { "tags": ["Catways"], "summary": "Lister les catways", "responses": { "200": { "description": "Liste des catways" }, "401": { "description": "Nom connecté" } } },
+            "post": {
+                "tags": ["Catways"], "summary": "Créer un catway",
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref":"components/schemas/Catway" } } } },
+                "responses": { "201": { "description": "Catway créé" }, "400": { "description": "Données invalides" } }
+            }
+        },
+        "/catways/{id}": {
+            "get": { "tags": ["Catways"], "summary": "Détails d'un catway", "parameters": [{ "$ref": "#/components/parameters/catwayId" }], "responses": {"200": { "description": "catway" }, "404": { "description": "Introuvable" } } },
+            "put": {
+                "tags": ["Catways"], "summary": "Modifier l'état d'un catway", "parameters": [{ "$ref": "#/components/parameters/catwayId" }],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "catwayState": { "type": "string" } } } } } },
+                "responses": { "200": { "description": "Catway modifié" }, "404": { "description": "Introuvable" } }
+            },
+            "delete": { "tags": ["Catways"], "summary": "Supprime un catway", "parameters": [{ "$ref": "#/components/parameters/catwayId"}], "responses": { "200": { "description": "Catway supprimé" }, "404": { "description": "Introuvable" } } } 
+        },
+        "/catways/{id}/reservations": {
+            "get": { "tags": ["Réservations"], "summary": "Lister les réservations d'un catway", "parameters": [{ "$ref": "#/components/parameters/catwayId" }], "responses": { "200":  { "description": "Lister des réservations" } } },
+            "post": {
+                "tags": ["Réservations"], "summary": "Créer une réservation", "parameters": [{"$ref": "#/components/parameters/catwayId" }],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Reservation" } } } },
+                "responses": { "201": { "description": "Réservation créée" }, "400": { "description":"Dates invalides" }, "404": {"description":"Catway introuvable" }, "409": { "description": "Période déjà réservée" }}
+            }
+        },
+        "/catways/{id}/reservations/{idReservation}": {
+            "get": { "tags": ["Réservations"], "summary": "Détails d'une réservation", "parameters": [{ "$ref": "#/components/parameters/catwayId" }, { "$ref": "#/components/parameters/reservationId" }], "responses": { "200": { "description": "Réservation" }, "404": { "description": "Introuvable" } } },
+            "put": {
+                "tags": ["Réservations"], "summary": "Modifier une réservation", "parameters": [{ "$ref": "#/components/parameters/catwayId" }, { "$ref": "#/components/parameters/reservationId" }],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Reservation" } } } },
+                "responses": { "200": { "description": "Réservation modifiée" }, "404": { "description": "Introuvable" }, "409": { "description": "Période déjà réservée" } }
+            },
+            "delete": { "tags": ["Réservations"], "summary": "Supprimer une réservation", "parameters": [{ "$ref": "#/components/parameters/catwayId" }, { "$ref": "#/components/parameters/reservationId" }], "responses": { "200": { "description": "Réservation supprimmée" }, "404": { "description": "Introuvable" } } }
+        },
+        "/users": {
+            "get": {"tags": ["Utilisateurs"], "summary": "Lister les utilisateurs", "responses": { "200": { "description": "Liste des utilisateurs" } } },
+            "post": {
+                "tags": ["Utilisateurs"], "summary": "Créer un utilisateur",
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+                "responses": { "201": { "description": "Utilisateur crée" }, "400": { "description":"Données invalides" }, "409": { "description": "Email déjà utilisé" } }
+            }
+        },
+        "/users/{email}": {
+            "get": { "tags": ["Utilisateurs"], "summary": "Détails d'un utilisateur", "parameters": [{ "$ref": "#/components/parameters/email" }], "responses": { "200": { "description": "Utilisateur"}, "404": { "description": "Introuvable" } } },
+            "put": {
+                "tags": ["Utilisateurs"], "summary": "Modifier un utilisateur", "parameters": [{ "$ref": "#/components/parameters/email" }],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+                "responses": { "200": { "description": "Utilisateur modifié" }, "404": { "description": "Introuvable" } }
+            },
+            "delete": { "tags": ["Utilisateurs"], "summary": "Supprimer un utilisateur", "parameters": [{ "$ref": "#/components/parameters/email" }], "responses": { "200": { "description": "Utilisateur supprimé" }, "404": { "description": "Introuvable" } } }
+        }
+    }
+}

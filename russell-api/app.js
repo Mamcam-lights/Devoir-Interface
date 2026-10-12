@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDoc = require('./docs/swagger.json');
 
 const app = express();
 const cookieParser = require('cookie-parser');
@@ -10,6 +12,7 @@ const middlewares = require('./models/middlewares');
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'accespublic')));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 app.get('/dashboard', (req, res) => {
     try {
