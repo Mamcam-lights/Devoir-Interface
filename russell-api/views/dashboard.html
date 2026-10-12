@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -9,24 +9,147 @@
     <h1>Tableau de bord</h1>
     <button id="logout">Déconnecxion</button>
     <h2>Catways</h2>
+    <form id="catwayForm">
+        <input type="number" id="cNumber" placeholder="Numero" required>
+        <select id="cType">
+            <option value="long">long</option>
+            <option value="short">short</option>
+        </select>
+        <input id="cState" placeholder="Etat" required>
+        <button>Ajouter</button>
+    </form>
+    <p id="msg"></p>
     <ul id="catways"></ul>
+    <h2>Réservations</h2>
+    <input type="number" id="rCatway" placeholder="N° du catway">
+    <button id="rLoad">Voir</button>
+    <form id="resForm">
+        <input id="rClient" placeholder="Client" required>
+        <input id="rBoat" placeholder="Bateau" required>
+        <input type="date" id="rStart" required>
+        <input type="date" id="rEnd" required>
+        <button>Réserver</button>
+    </form>
+    <p id="rMsg"></p>
+    <ul id="reservations"></ul>
 
     <script>
+        const headers = { 'Content-type': 'application/json' };
+
         document.getElementById('logout').addEventListener('click', async () => {
             await fetch('/logout');
             location.href = '/';
         });
 
-        (async () => {
+        async function loadCatways() {
             const res = await fetch('/catways');
+            if (res.status === 401) return (location.href = '/');
             const list = await res.json();
             const ul = document.getElementById('catways');
+            ul.innerHTML = '';
+
             list.forEach(c => {
                 const li = document.createElement('li');
                 li.textContent = 'n°${c.catwayNumber} - ${c.catwayType} - ${c.catwayState}';
+                const edit = document.createElement('button');
+                edit.textContent = "Modifier l'état";
+                edit.onclick = async () => {
+                    const state = prompt('Nouvel état', c.catwayState);
+                    if (!state) return;
+                    await fetch('/catways/${ C.catwayNumber}', {
+                        method: 'PUT', headers,
+                        body: JSON.stringify({ catwayState: state })
+                    });
+                    loadCatways();
+                };
+
+                const del = document.createElement('button');
+                del.textContent = 'Supprimer';
+                del.onclick = async () => {
+                    if (!confirm('Supprimer le catway ${c.catwayNumber} ?')) return;
+                    await fetch('/catways/${c.catwayNumber}', { method: 'DELETE' });
+                    loadCatways();
+                };
+
+                li.append(edit, del);
                 ul.appendChild(li);
             });
-        })();
+        }
+
+        document.getElementById('catwayForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/catways', {
+                method: 'POST', headers,
+                body: JSON.stringify({
+                    catwayNumber: Number(document.getElementById('cNumber').value),
+                    catwayType: document.getElementById('cType').value,
+                    catwayState: document.getElementById('cState').value
+                })
+            });
+            const data = await res.json();
+            document.getElementById('msg').textContent = res.ok ? 'Catway ajouté' : data.message;
+            if (res.ok) e.target.reset();
+            loadCatways();
+        });
+        async function loadReservations() {
+            const n = document.getElementById('rCatway').value;
+            if (!n) return;
+            const res = await fetch(`/catways/${n}/reservations`);
+            if (res.status === 401) return (location.href = '/');
+            const list = await res.json();
+            const ul = document.getElementById('reservations');
+            ul.innerHTML = '';
+
+            list.forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = `${r.clientName} - ${r.boatName} - ${r.startDate.slice(0, 10)} -> ${r.endDate.slice(0, 10)} `;
+
+                const edit = document.createElement('button');
+                edit.textContent = 'Changer le bateau';
+                edit.onclick = async () => {
+                    const boat = prompt('Nom du bateau', r.boatName);
+                    if (!boat) return;
+                    await fetch(`/catways/${n}/reservations/${r._id}`, {
+                        method: 'PUT', headers,
+                        body: JSON.stringify({ boatName: boat })
+                    });
+                    loadReservations();
+                };
+
+                const del = document.createElement('button');
+                del.textContent = 'Supprimer';
+                del.onclick = async () => {
+                    if (!confirm('Supprimer cette réservation ?')) return;
+                    await fetch(`/catways/${n}/reservations/${r._id}`, { method: 'DELETE' });
+                    loadReservations();
+                };
+                li.append(edit, del);
+                ul.appendChild(li);
+            });
+        }
+
+        document.getElementById('rLoad').addEventListener('click', loadReservations);
+
+        document.getElementById('resForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const n = document.getElementById('rCatway').value;
+            if (!n) return (document.getElementById('rMsg').textContent = 'Indique le n° du catway');
+            const res = await fetch('/catways/${n}/reservations', {
+                method: 'POST', headers,
+                body: JSON.stringify({
+                    clientName: document.getElementById('rClient').value,
+                    boatName: document.getElementById('rBoat').value,
+                    startDate: document.getElementById('rStart').value,
+                    endDate: document.getElementById('rEnd').value
+                })
+            });
+            const data = await res.json();
+            document.getElementById('rMsg').textContent = res.ok ? 'Réservation créée' : data.message;
+            if (res.ok) e.target.reset();
+            loadReservations();
+        });
+
+        loadCatways();
     </script>
 </body>
 </html>
